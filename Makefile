@@ -1,6 +1,5 @@
 .PHONY: all data features train test clean model check-model
 
-# The project venv if it exists (macOS has no bare `python`), else python.
 PYTHON ?= $(shell [ -x .venv/bin/python ] && echo .venv/bin/python || echo python)
 
 # --- The pipeline ----------------------------------------------------------

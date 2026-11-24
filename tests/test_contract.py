@@ -50,19 +50,12 @@ def unclassified_columns(columns) -> set[str]:
 
 
 def test_every_raw_column_is_classified():
-    """Every column in the raw CSV must be named in src/config.py: forbidden,
-    a raw feature, an encoded source, or deliberately ignored. feature_columns()
-    admits any numeric column not in FORBIDDEN, so without this a new column
-    appended to the data -- or a leaky one renamed to something innocent --
-    would enter the model silently."""
     header = pd.read_csv(RAW, nrows=0).columns
     unknown = unclassified_columns(header)
     assert not unknown, f"unclassified raw columns, add them to src/config.py: {sorted(unknown)}"
 
 
 def test_raw_data_is_unmodified():
-    """Catches a `cp` into data/raw/ from Bash, which the Edit/Write deny
-    rules and the PostToolUse hook never see."""
     verify_raw()
 
 

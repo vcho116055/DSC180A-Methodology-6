@@ -22,7 +22,6 @@ def download(force: bool = False) -> None:
 
 
 def verify_raw(path=None) -> None:
-    """Fail loudly if the raw file is not byte-for-byte the one we audited."""
     path = path or RAW
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
     if digest != RAW_SHA256:

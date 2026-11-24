@@ -55,14 +55,7 @@ MODELS = {
 
 
 class RelativeTarget(BaseEstimator, RegressorMixin):
-    """Exercise 4: fit `estimator` on cnt relative to a lagged level column,
-    then map predictions back to rides. A tree cannot predict above the
-    largest target it saw in 2011; a ratio or difference to recent demand
-    stays inside the training range even as the level grows.
-
-      mode="ratio": fit y / X[base],  predict est(X) * X[base]
-      mode="diff":  fit y - X[base],  predict est(X) + X[base]
-    """
+    """Fit on cnt minus (or divided by) a lagged level column, then map back."""
 
     def __init__(self, estimator, base: str = "cnt_roll_28", mode: str = "ratio"):
         self.estimator = estimator

@@ -19,8 +19,6 @@ case "$path" in
 esac
 
 cd "${CLAUDE_PROJECT_DIR:-.}" || exit 0
-# Prefer the project venv: macOS has no bare `python`, and a hook that fails
-# with "command not found" is a false red that teaches you to ignore it.
 PY=.venv/bin/python
 [ -x "$PY" ] || PY=python3
 if ! out=$("$PY" -m pytest tests/test_leakage.py -q 2>&1); then

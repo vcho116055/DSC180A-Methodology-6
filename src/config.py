@@ -15,9 +15,6 @@ METRICS = ROOT / "reports" / "metrics.json"
 #     artefact, and the mirror's cleaning dropped the whole day)
 #   - `weather` is the labels GOOD / MISTY / BAD, not UCI's codes 1-4
 #   - two extra columns: `days_since_2011` and `cnt_2d_bfr`
-# Raw data is immutable. The permission rules in .claude/settings.json only
-# stop the Edit/Write tools; a `cp` from Bash walks past them. load_raw()
-# checks this hash, so every stage and every test fails on a changed file.
 RAW_SHA256 = "a6bed1577f6e4de56dcfae6d8315985073cc0ad3446c8c99ed60c86a0b5ad9dc"
 
 DATA_URL = (
@@ -50,13 +47,8 @@ UNVERIFIED_COLS = {"cnt_2d_bfr"}
 # What feature_columns() and the tests actually enforce.
 FORBIDDEN = LEAKAGE_COLS | TIME_INDEX_COLS | UNVERIFIED_COLS
 
-# --- Every other raw column, classified. tests/test_contract.py fails on
-# any column in the raw CSV that is in none of these sets (or FORBIDDEN, or
-# dteday), so a new or renamed column cannot reach the model unreviewed.
-RAW_FEATURE_COLS = {"temp", "atemp", "hum", "windspeed"}  # used as-is
-ENCODED_COLS = {"holiday", "workday", "weather"}  # re-encoded in features.py
-# String labels whose information the dteday-derived features already
-# carry (dayofweek, month_sin/cos); select_dtypes drops them.
+RAW_FEATURE_COLS = {"temp", "atemp", "hum", "windspeed"}
+ENCODED_COLS = {"holiday", "workday", "weather"}
 IGNORED_COLS = {"season", "mnth", "weekday"}
 
 # Temporal split: train on 2011, validate on H1 2012, test on H2 2012.
@@ -66,4 +58,4 @@ VALID_END = "2012-06-30"
 # Longest lag window in src/features.py. The first LAG_WARMUP calendar days
 # have no complete history and are dropped; tests/test_contract.py uses this
 # to bound how many rows may legitimately disappear.
-LAG_WARMUP = 28  # cnt_roll_28; was 7 before that feature was added
+LAG_WARMUP = 28
