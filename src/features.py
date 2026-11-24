@@ -76,7 +76,7 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     # 28-day lag the moment a longer feature arrives.
     out["cnt_lag_1"] = out[TARGET].shift(1)
     out["cnt_lag_7"] = out[TARGET].shift(7)
-    out["cnt_roll_7"] = out[TARGET].rolling(7).mean()
+    out["cnt_roll_7"] = out[TARGET].shift(1).rolling(7).mean()
 
     # 28-day trailing level of demand. Shifted before rolling, so the
     # window for date d is d-28 .. d-1. Gives the model the current level
