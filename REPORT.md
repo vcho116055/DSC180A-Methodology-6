@@ -157,4 +157,15 @@ two tasks.
 - Exercise 4: use the difference from `cnt_roll_7`, chosen on validation
   before one test run; judged defensible.
 - Exercise 5: persistence over ridge for deployment, on MAE.
-- TODO(you): items still under review; see the end of this conversation.
+- Accept the starter's rules after review: `casual` and `registered` are
+  leakage; `cnt_2d_bfr` and the time indexes are excluded; split 2011 /
+  H1 2012 / H2 2012; report the mean and persistence baselines.
+- Ignore `season`, `mnth` and `weekday`: the date-based features already
+  carry the same information.
+- The result is believable only as a modest claim (below).
+- TODO(you): the Fault-4 hash check, pending review of `src/ingest.py`.
+
+**Is the result believable?** Yes, as a modest claim. Under a temporal split,
+ridge beats persistence on R² but not on MAE, and it underpredicts by about
+427 rides a day. The headline is a small, real improvement on large swings,
+not a better everyday forecaster.
