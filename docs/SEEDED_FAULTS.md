@@ -221,8 +221,29 @@ hook matches `Edit|Write`, so a Bash `cp` never reaches it. Before the fix,
 a tampered CSV with the same columns and the `casual + registered == cnt`
 identity intact passes every test and silently changes the metrics.
 
-TODO(you): run the fault yourself on the pre-fix commit and paste the
-output here (commands at the end of this section).
+**Run by hand** in a separate clone, from a plain terminal (no agent):
+
+```
+$ git checkout 909fbc7~1
+HEAD is now at e1cb6ad Fix seeded fault 3: restore the raise in encode_weather (1 agent turn)
+$ cp /tmp/tampered.csv data/raw/bike_daily.csv && make test | tail -1
+18 passed in 2.20s
+```
+
+Before the fix the tampered file passes the whole suite. After it, on `main`:
+
+```
+$ cp /tmp/tampered.csv data/raw/bike_daily.csv && make test | tail -3
+make: *** [test] Error 1
+ERROR tests/test_split.py::test_splits_are_ordered_in_time - ValueError: bike...
+ERROR tests/test_split.py::test_no_overlapping_dates - ValueError: bike_daily...
+2 failed, 3 passed, 14 errors in 1.93s
+$ git checkout -- data/raw/ && shasum -a 256 data/raw/bike_daily.csv
+a6bed1577f6e4de56dcfae6d8315985073cc0ad3446c8c99ed60c86a0b5ad9dc  data/raw/bike_daily.csv
+```
+
+Every test that loads the data errors on the hash check, `test_raw_data_is_unmodified`
+fails, and the file is restored to the audited hash.
 
 **What would catch it.**
 - A **hash check** on the raw file in the pipeline and the tests
