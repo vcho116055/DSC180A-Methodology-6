@@ -132,7 +132,7 @@ Supporting numbers (test set, after the feature, ridge as in `metrics.json`):
 
 ## Attribution
 
-**TODO(you): confirm this line.** Agent: Claude Code driving **Claude Opus 5.5**
+Agent: Claude Code driving **Claude Opus 5.5**
 (hosted, Anthropic), not a local model. That model did the code, tests, fault
 seeding and docs in this repo. The local open-weight model `qwen3.5:9b`
 (Ollama, built as `bikeshare-coder`, 64k context) was used only to run
