@@ -9,8 +9,8 @@ sends after an Edit.
 was launched from the parent directory, so the repo's `.claude/settings.json`
 hook config was not loaded and the hook did not fire *live* on those edits.
 The stderr below comes from piping the exact PostToolUse payload into the
-script. TODO(you): from the repo root, run `claude`, ask it to re-seed
-fault 1, and confirm the hook's message appears in the session.
+script. Fault 1 was then re-seeded in a live session, where the hook fired on
+its own (next section).
 
 | # | Fault | Suite | Hook | Agent turns to fix | Commits |
 |---|-------|-------|------|--------------------|---------|
@@ -74,6 +74,49 @@ FAILED tests/test_leakage.py::test_no_forbidden_features - AssertionError: fo...
 1 failed, 8 passed in 0.32s
 (hook exit code: 2)
 ```
+
+### Fault 1, live: the hook firing inside a Claude Code session
+
+Claude Code started from the repo root on a Windows PC, model `bikeshare-coder`
+(`qwen3.5:27b` via Ollama, 64k context), with the workspace trusted so
+`.claude/settings.json` was loaded. Prompt: *"Use the Edit tool to change the
+return line of feature_columns in src/features.py so it appends "casual" to the
+list ... Make only that one edit."* Immediately after the edit, the session showed:
+
+```
+PostToolUse:Edit hook blocking error from command: "${CLAUDE_PROJECT_DIR}/.claude/hooks/check_leakage.sh":
+  [${CLAUDE_PROJECT_DIR}/.claude/hooks/check_leakage.sh]: Leakage tests failed after editing
+  C:/Users/Eubin/Documents/DSC180A-Methodology-6/src/features.py:
+  ______________________________________________________ test_no_forbidden_features
+  _______________________________________________________
+
+  feats =         dteday  instant  season      yr mnth holiday  ... month_cos  weather_severity  cnt_lag_1  cnt_lag_7   cnt_roll...  DEC
+      N  ...  1.000000               1.0     1796.0      920.0  1531.428571  3969.428571
+
+  [672 rows x 29 columns]
+
+      def test_no_forbidden_features(feats):
+          """Guards the gate, not the data: feature_columns() excludes FORBIDDEN by
+          construction, so this cannot discover a *new* leaky column. What it
+          catches is someone editing feature_columns() or FORBIDDEN -- which is
+          exactly the fault the Step 7 hook demonstrates."""
+          cols = set(feature_columns(feats))
+  >       assert not (cols & FORBIDDEN), f"forbidden columns in feature set: {cols & FORBIDDEN}"
+  E       AssertionError: forbidden columns in feature set: {'casual'}
+  E       assert not ({'atemp', 'casual', 'cnt_lag_1', 'cnt_lag_7', 'cnt_roll_28', 'cnt_roll_7', ...} & {'casual', 'cnt', 'cnt_2d_bfr',
+  'days_since_2011', 'instant', 'registered', ...})
+
+  tests\test_leakage.py:31: AssertionError
+  ======================================================== short test summary info
+  ========================================================
+  FAILED tests/test_leakage.py::test_no_forbidden_features - AssertionError: forbidden columns in feature set: {'casual'}
+  1 failed, 9 passed in 0.59s
+```
+
+The failure reached the agent as a blocking error, not something a person had
+to notice. Asked "The hook reported a failure. Fix it.", the agent needed
+**1 tool call** (one Edit removing `+ ["casual"]`). `git diff --stat` was then
+empty: nothing was committed and the tree was clean.
 
 ## Fault 2: `.shift(1)` deleted from `cnt_roll_7`
 
