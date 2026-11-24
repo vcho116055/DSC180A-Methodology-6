@@ -14,10 +14,10 @@ fault 1, and confirm the hook's message appears in the session.
 
 | # | Fault | Suite | Hook | Agent turns to fix | Commits |
 |---|-------|-------|------|--------------------|---------|
-| 1 | `"casual"` appended to `feature_columns` | red (`test_no_forbidden_features`) | exit 2 | 1 | `9dd33c5`, `1678f46` |
-| 2 | `.shift(1)` removed from `cnt_roll_7` | red (`test_rolling_mean_excludes_today`) | exit 2 | 1 | `4b162fb`, `470b28e` |
-| 3 | `raise` removed from `encode_weather` | **green**, until a new test was added | exit 0, then exit 2 | 1 (+1 to write the test) | `303787d`, `b109001`, `793552f` |
-| 4 | `cp` over `data/raw/bike_daily.csv` from Bash | green before the fix; red after | never runs (Bash is not `Edit\|Write`) | n/a | `5070ca0` |
+| 1 | `"casual"` appended to `feature_columns` | red (`test_no_forbidden_features`) | exit 2 | 1 | `5e0b87a`, `83171d5` |
+| 2 | `.shift(1)` removed from `cnt_roll_7` | red (`test_rolling_mean_excludes_today`) | exit 2 | 1 | `a5e9d68`, `d38f303` |
+| 3 | `raise` removed from `encode_weather` | **green**, until a new test was added | exit 0, then exit 2 | 1 (+1 to write the test) | `2d0b02b`, `2043990`, `e1cb6ad` |
+| 4 | `cp` over `data/raw/bike_daily.csv` from Bash | green before the fix; red after | never runs (Bash is not `Edit\|Write`) | n/a | `909fbc7` |
 
 ## Fault 1: a forbidden column in `feature_columns`
 
@@ -235,7 +235,7 @@ output here (commands at the end of this section).
 - A **Stop hook** running `make test`, which with the hash test in place
   blocks "done" while the file differs.
 
-**Implemented: SHA-256 check** (commit `5070ca0`). `src/config.py` gains
+**Implemented: SHA-256 check** (commit `909fbc7`). `src/config.py` gains
 `RAW_SHA256`. `src/ingest.verify_raw()` runs inside `load_raw()`, so every
 stage fails, and `tests/test_contract.py::test_raw_data_is_unmodified`
 makes `make test` fail too.
@@ -262,7 +262,7 @@ ValueError: bike_daily_tampered.csv has sha256 0a0416c1bc21a1d5..., expected a6b
 
 ```bash
 .venv/bin/python -c "import pandas as pd; df=pd.read_csv('data/raw/bike_daily.csv'); df.loc[df.dteday=='2012-07-04','temp']-=10; df.to_csv('/tmp/tampered.csv', index=False)"
-git stash -u; git checkout 5070ca0~1          # before the hash check
+git stash -u; git checkout 909fbc7~1          # before the hash check
 cp /tmp/tampered.csv data/raw/bike_daily.csv && make test | tail -1   # expect: all pass
 git checkout -- data/raw/ && git checkout main && git stash pop
 cp /tmp/tampered.csv data/raw/bike_daily.csv && make test | tail -3   # expect: red
@@ -271,7 +271,7 @@ git checkout -- data/raw/ && shasum -a 256 data/raw/bike_daily.csv    # a6bed157
 
 ## Exercise 1: the cnt_roll_28 test, failing before the feature existed
 
-Commit `9578e83` (test only). `make test`:
+Commit `a9ee4c5` (test only). `make test`:
 
 ```
 The above exception was the direct cause of the following exception:
@@ -282,4 +282,4 @@ FAILED tests/test_leakage.py::test_roll_28_is_mean_of_28_strictly_earlier_days
 1 failed, 15 passed in 1.15s
 ```
 
-It fails for the right reason: the column does not exist yet. Commit `62589b6` adds the feature and the suite goes to 16 passed.
+It fails for the right reason: the column does not exist yet. Commit `55ee7cb` adds the feature and the suite goes to 16 passed.

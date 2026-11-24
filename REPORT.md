@@ -7,7 +7,7 @@
 
 All numbers are from `make all`: the "after" rows are `reports/metrics.json`,
 the "before" rows are `reports/metrics_before_feature.json` (the same command
-run on the unmodified starter, commit `a2fabd7`). Train = 2011, validation =
+run on the unmodified starter, commit `fe101a9`). Train = 2011, validation =
 H1 2012, test = H2 2012. R² is computed against each split's own mean, so 0
 means "as good as a constant nobody could have known in advance".
 
@@ -45,7 +45,7 @@ Adding `cnt_roll_28` (the mean of the previous 28 days) raised validation R²
 on identical training rows from 0.6462 to 0.6839 for ridge and from 0.1929 to
 0.2415 for gradient boosting. **TODO(you): one sentence: did you keep it, and
 why?** (The table's "after" rows assume it is kept. If you drop it, revert
-commit `62589b6`, rerun `make all`, and regenerate this table.)
+commit `55ee7cb`, rerun `make all`, and regenerate this table.)
 
 ## Exercise 4: target transformation
 
