@@ -1,8 +1,5 @@
 # Forecasting daily bikeshare demand: report
 
-> **DRAFT.** Sections marked **TODO(you)** are judgement calls the rubric
-> requires to be yours. Delete this note and every TODO before submitting.
-
 ## Results
 
 All numbers are from `make all`: the "after" rows are `reports/metrics.json`,
