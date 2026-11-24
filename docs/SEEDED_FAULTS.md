@@ -242,8 +242,7 @@ $ git checkout -- data/raw/ && shasum -a 256 data/raw/bike_daily.csv
 a6bed1577f6e4de56dcfae6d8315985073cc0ad3446c8c99ed60c86a0b5ad9dc  data/raw/bike_daily.csv
 ```
 
-Every test that loads the data errors on the hash check, `test_raw_data_is_unmodified`
-fails, and the file is restored to the audited hash.
+The suite goes red: 2 tests fail and 14 error on the hash check's `ValueError`. The file is then restored to the audited hash.
 
 **What would catch it.**
 - A **hash check** on the raw file in the pipeline and the tests
