@@ -157,7 +157,7 @@ async def audit_repo(repo: Path) -> dict[str, Any]:
         # automatically in a headless run, so the auditor can read and run
         # but has no Edit or Write to grant.
         permission_mode="default",
-        max_turns=40,
+        max_turns=150,
         model=os.environ.get("AUDIT_MODEL", "bikeshare-coder"),
         output_format={"type": "json_schema", "schema": REPORT_SCHEMA},
     )
@@ -166,22 +166,27 @@ async def audit_repo(repo: Path) -> dict[str, Any]:
     # intermediate TextBlock ("Let me look at config.py first...") and
     # json.loads-ing the lot fails on the first repo that thinks out loud.
     final: ResultMessage | None = None
-    async for message in query(prompt=f"Audit the repo at {repo}.", options=options):
-        if isinstance(message, ResultMessage):
-            final = message
+    name = repo.resolve().name
+    try:
+        async for message in query(prompt=f"Audit the repo at {repo}.", options=options):
+            if isinstance(message, ResultMessage):
+                final = message
+    except Exception as exc:
+        # The SDK raises (e.g. on max turns) instead of returning an error result.
+        return {"repo": name, "error": "run_failed", "raw": repr(exc)[:500]}
 
     if final is None or final.is_error:
-        return {"repo": repo.name, "error": "run_failed",
+        return {"repo": name, "error": "run_failed",
                 "raw": (final.result or "")[:500] if final else ""}
     if final.structured_output is not None:
-        return {"repo": repo.name, **final.structured_output}
+        return {**final.structured_output, "repo": name}
     try:
         # Belt and braces: small open-weight models do not always honour
         # the schema; fall back to parsing the final text.
-        return {"repo": repo.name, **json.loads((final.result or "").strip())}
+        return {**json.loads((final.result or "").strip()), "repo": name}
     except json.JSONDecodeError:
         # Never let one malformed reply kill a 40-repo run.
-        return {"repo": repo.name, "error": "unparseable", "raw": (final.result or "")[:500]}
+        return {"repo": name, "error": "unparseable", "raw": (final.result or "")[:500]}
 
 
 async def main() -> None:
