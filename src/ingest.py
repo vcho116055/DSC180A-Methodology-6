@@ -2,12 +2,13 @@
 
 Run: python -m src.ingest
 """
+import hashlib
 import sys
 import urllib.request
 
 import pandas as pd
 
-from src.config import DATA_URL, RAW
+from src.config import DATA_URL, RAW, RAW_SHA256
 
 EXPECTED_MIN_ROWS = 700
 REQUIRED_COLS = {"dteday", "cnt", "casual", "registered", "temp", "hum", "windspeed"}
@@ -20,8 +21,21 @@ def download(force: bool = False) -> None:
     urllib.request.urlretrieve(DATA_URL, RAW)
 
 
-def load_raw() -> pd.DataFrame:
-    df = pd.read_csv(RAW, parse_dates=["dteday"])
+def verify_raw(path=None) -> None:
+    """Fail loudly if the raw file is not byte-for-byte the one we audited."""
+    path = path or RAW
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    if digest != RAW_SHA256:
+        raise ValueError(
+            f"{path.name} has sha256 {digest[:16]}..., expected {RAW_SHA256[:16]}...: "
+            "raw data was modified. Restore it with `git checkout -- data/raw/`."
+        )
+
+
+def load_raw(path=None) -> pd.DataFrame:
+    path = path or RAW
+    verify_raw(path)
+    df = pd.read_csv(path, parse_dates=["dteday"])
     missing = REQUIRED_COLS - set(df.columns)
     if missing:
         raise ValueError(f"raw data is missing required columns: {sorted(missing)}")

@@ -6,7 +6,7 @@ from sklearn.metrics import r2_score
 from src.config import (ENCODED_COLS, FORBIDDEN, IGNORED_COLS, LAG_WARMUP, RAW,
                         RAW_FEATURE_COLS, TARGET)
 from src.features import build_features, feature_columns, reindex_to_calendar
-from src.ingest import load_raw
+from src.ingest import load_raw, verify_raw
 from src.train import MODELS, temporal_split
 
 
@@ -58,6 +58,12 @@ def test_every_raw_column_is_classified():
     header = pd.read_csv(RAW, nrows=0).columns
     unknown = unclassified_columns(header)
     assert not unknown, f"unclassified raw columns, add them to src/config.py: {sorted(unknown)}"
+
+
+def test_raw_data_is_unmodified():
+    """Catches a `cp` into data/raw/ from Bash, which the Edit/Write deny
+    rules and the PostToolUse hook never see."""
+    verify_raw()
 
 
 def test_beats_the_mean_baseline(feats):

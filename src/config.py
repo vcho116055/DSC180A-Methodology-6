@@ -15,6 +15,11 @@ METRICS = ROOT / "reports" / "metrics.json"
 #     artefact, and the mirror's cleaning dropped the whole day)
 #   - `weather` is the labels GOOD / MISTY / BAD, not UCI's codes 1-4
 #   - two extra columns: `days_since_2011` and `cnt_2d_bfr`
+# Raw data is immutable. The permission rules in .claude/settings.json only
+# stop the Edit/Write tools; a `cp` from Bash walks past them. load_raw()
+# checks this hash, so every stage and every test fails on a changed file.
+RAW_SHA256 = "a6bed1577f6e4de56dcfae6d8315985073cc0ad3446c8c99ed60c86a0b5ad9dc"
+
 DATA_URL = (
     "https://raw.githubusercontent.com/christophM/"
     "interpretable-ml-book/master/data/bike.csv"
