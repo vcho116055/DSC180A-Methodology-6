@@ -43,9 +43,8 @@ count it saw in training (6,043, on 2011-07-04), and 57% of test days exceed it.
 
 Adding `cnt_roll_28` (the mean of the previous 28 days) raised validation R²
 on identical training rows from 0.6462 to 0.6839 for ridge and from 0.1929 to
-0.2415 for gradient boosting. **TODO(you): one sentence: did you keep it, and
-why?** (The table's "after" rows assume it is kept. If you drop it, revert
-commit `55ee7cb`, rerun `make all`, and regenerate this table.)
+0.2415 for gradient boosting. I kept it: both gains are well above the 0.01
+noise floor, and the cost is 42 fewer 2011 training rows (348 → 306).
 
 ## Exercise 4: target transformation
 
@@ -73,25 +72,48 @@ that stays inside its training range. A ratio hurts ridge (a linear model of a
 ratio, multiplied back by the level, is no longer linear in the features). A
 difference leaves ridge essentially unchanged.
 
-**TODO(you):**
-1. Pick **one** variant and say why, *before* scoring the test set. Six
-   variants on 182 validation days means the best one is partly selected by
-   noise.
-2. Score the test set once:
-   `.venv/bin/python -m src.train --target-transform <mode> --base <col> --final`,
-   and paste the test R² and MAE here, saying it was run once.
-3. Decide: defensible, or a way to win the comparison? Points to weigh:
-   relative-to-recent-demand is a standard way to model a trending series and
-   uses only past data, but the gain might come from the transform doing the
-   extrapolation rather than the tree learning anything. Compare the
-   transformed tree with the transformed ridge, not just with untransformed
-   ridge.
+**Chosen variant: difference from `cnt_roll_7`.** It is the only variant near
+the top for both models (ridge R² 0.6849, gradient boosting R² 0.7139 on
+validation). The ratio variants score higher for the tree but drop ridge to
+R² 0.40–0.44.
+
+**Test set, scored once** after choosing (commit `2c03b3e`,
+`reports/metrics_diff_cnt_roll_7.json`):
+
+| Model | Test R² | Test MAE |
+|---|---|---|
+| gradient boosting, untransformed | −0.46 | 1952.4 |
+| gradient boosting, difference from `cnt_roll_7` | 0.6331 | 830.1 |
+| ridge, untransformed | 0.6239 | 879.3 |
+| ridge, difference from `cnt_roll_7` | 0.6228 | 880.3 |
+| persistence | 0.5099 | 840.1 |
+
+**Verdict: defensible.** It fixes a known limitation of trees (they cannot
+predict outside their training range) using only past data: `cnt_roll_7` on
+date d is built from d−7 … d−1. The transformation leaves ridge unchanged,
+which is consistent with it fixing the tree's extrapolation problem rather
+than adding information. The committed `reports/metrics.json` remains the
+untransformed pipeline.
 
 ## Exercise 5: ridge vs persistence
 
-**TODO(you): one paragraph arguing that ridge is, or is not, worth deploying
-over "yesterday again".** Either answer is accepted; an unargued one is not.
-Evidence (test set, after the feature, ridge as in `metrics.json`):
+**Persistence is the better choice to deploy.** On the H2 2012 test set, ridge
+has the higher R² (0.6239 vs 0.5099) but the higher MAE (879.3 vs 840.1) and
+median error (807 vs 506), and it is closer to the truth on only 43% of the
+184 days. The two metrics disagree because R² squares errors, so the few
+large misses dominate it. On the 52 days where demand moved by more than
+1,000 rides from the day before (a threshold chosen for this analysis), ridge
+errs by 1,196 rides on average against persistence's 1,977, saving about
+(1,977 − 1,196) × 52 ≈ 40,600 rides of error. On the other 132 days it errs by
+755 against 392, adding about (755 − 392) × 132 ≈ 47,900. Net, ridge is about
+7,300 rides worse over the half-year, matching its MAE gap (39.2 rides × 184
+days ≈ 7,200; the small difference is rounding in the per-group averages). Since the
+typical daily error is the cost that matters here, persistence wins. Ridge
+would be the better choice if a large miss cost far more than a small one,
+and it has a fixable flaw: it underpredicts by about 427 rides a day because
+it was fit on 2011 levels.
+
+Supporting numbers (test set, after the feature, ridge as in `metrics.json`):
 
 - Test R² 0.6239 vs 0.5099 (+0.11), but MAE 879.3 vs 840.1: ridge is *worse*
   on the average day.
@@ -130,8 +152,9 @@ two tasks.
 - `docs/SEEDED_FAULTS.md`, drafts of this report and of `docs/DECISIONS.md` entries
 - The analyses in Exercises 4 and 5 (numbers only)
 
-**Decisions that were mine:** **TODO(you): keep this list short, make it
-true, and make every item match a line in `docs/DECISIONS.md`.**
-Expected items: whether to keep `cnt_roll_28`; which Exercise 4 variant to
-use and whether it is defensible; your Exercise 5 position; accepting the
-leakage / split / baseline rules from the starter (or changing them).
+**Decisions that were mine** (each has a line in `docs/DECISIONS.md`):
+- Keep `cnt_roll_28` (the agent proposed the feature).
+- Exercise 4: use the difference from `cnt_roll_7`, chosen on validation
+  before one test run; judged defensible.
+- Exercise 5: persistence over ridge for deployment, on MAE.
+- TODO(you): items still under review; see the end of this conversation.
