@@ -8,7 +8,10 @@ rides) from calendar, weather, and lagged-demand features.
 - `make features` - build `data/processed/features.parquet`
 - `make train` - fit models, write `reports/metrics.json`
 - `make test` - pytest; run this before claiming anything works
-- `make all` - the three pipeline stages in order
+- `make all` - the three pipeline stages in order; reproduces
+  `reports/metrics.json` exactly (ridge test R^2 is the headline number)
+- `/new-feature <idea>` to add a predictor; `/seed-fault <fault>` to break
+  the pipeline on purpose and record what catches it
 
 ## Non-negotiable rules
 - **Never** put `casual` or `registered` in a feature set:
@@ -20,6 +23,12 @@ rides) from calendar, weather, and lagged-demand features.
 - Any new lag or rolling feature must be built on a gap-free calendar
   index (`src.features.reindex_to_calendar`) and must `.shift(1)` before
   it aggregates. Add a test for it in `tests/test_leakage.py`.
+- `LAG_WARMUP` is the *longest* window (now 28, for `cnt_roll_28`). Never
+  build a specific lag from it; write the window length literally.
+- Every raw column must be classified in `src/config.py`; a new one fails
+  `test_every_raw_column_is_classified`. Classify it, don't silence it.
+- `data/raw/` is immutable and hash-checked (`RAW_SHA256`). Never write
+  to it by any means, Bash included.
 - Report the mean baseline **and** the persistence baseline (yesterday's
   count) alongside every model. A negative R^2 is a finding, not a bug
   to hide.
