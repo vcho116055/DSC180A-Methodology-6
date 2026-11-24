@@ -19,3 +19,4 @@ Agents append here via the `/new-feature` skill; you append here by hand.
 - 2026-11-24 Reviewed and accepted the starter's rules: leakage set (`casual`, `registered`), exclusions (`cnt_2d_bfr`, time indexes), the 2011 / H1 2012 / H2 2012 split, and both baselines.
 - 2026-11-24 Ignore raw `season`, `mnth`, `weekday` (IGNORED_COLS): `month_sin`/`month_cos` and `dayofweek`, derived from dteday, carry the same information.
 - 2026-11-24 Believable as a modest claim only: ridge beats persistence on R^2 (0.6239 vs 0.5099) but not on MAE (879.3 vs 840.1) and underpredicts by ~427 rides/day. The headline is a small, real gain on large swings, not a better everyday forecaster.
+- 2026-11-24 Adopt the SHA-256 raw-data check (`verify_raw`) as the Fault-4 defence after reviewing it: it catches changes from any tool, where a PreToolUse pattern on Bash could be evaded.

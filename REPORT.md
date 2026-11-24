@@ -163,7 +163,8 @@ two tasks.
 - Ignore `season`, `mnth` and `weekday`: the date-based features already
   carry the same information.
 - The result is believable only as a modest claim (below).
-- TODO(you): the Fault-4 hash check, pending review of `src/ingest.py`.
+- Guard raw data with a SHA-256 check (`verify_raw`) as the Fault-4 defence
+  (the agent proposed it; I reviewed and adopted it).
 
 **Is the result believable?** Yes, as a modest claim. Under a temporal split,
 ridge beats persistence on R² but not on MAE, and it underpredicts by about
