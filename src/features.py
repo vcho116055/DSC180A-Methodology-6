@@ -70,10 +70,18 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
 
     # --- Lagged target: past values only. shift(1) is the whole ballgame;
     # without it, cnt_roll_7 would contain today's count. -----------------
-    # If you add a longer lag, raise LAG_WARMUP in src/config.py.
+    # If you add a longer lag, raise LAG_WARMUP in src/config.py. Window
+    # lengths are literal here on purpose: LAG_WARMUP is the *longest*
+    # window, so building cnt_lag_7 from it would silently turn it into a
+    # 28-day lag the moment a longer feature arrives.
     out["cnt_lag_1"] = out[TARGET].shift(1)
-    out["cnt_lag_7"] = out[TARGET].shift(LAG_WARMUP)
-    out["cnt_roll_7"] = out[TARGET].shift(1).rolling(LAG_WARMUP).mean()
+    out["cnt_lag_7"] = out[TARGET].shift(7)
+    out["cnt_roll_7"] = out[TARGET].shift(1).rolling(7).mean()
+
+    # 28-day trailing level of demand. Shifted before rolling, so the
+    # window for date d is d-28 .. d-1. Gives the model the current level
+    # of a series that grew ~65% year on year.
+    out["cnt_roll_28"] = out[TARGET].shift(1).rolling(28).mean()
 
     return out.dropna().reset_index(drop=True)
 
