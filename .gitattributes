@@ -1,0 +1,2 @@
+# Raw data is hash-checked (src/config.py RAW_SHA256): never convert line endings.
+data/raw/** -text
